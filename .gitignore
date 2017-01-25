@@ -1,0 +1,18 @@
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+*.sdf
+*.opensdf
+
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# Visual Studio 2015 cache/options directory
+.vs/
+**/obj/**
+**/output/**
+**/tmp/**
