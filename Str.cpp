@@ -1,3 +1,25 @@
+//  MIT License
+//  
+//  Copyright(c) 2017 Eric Thiffeault
+//  
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
+
 #include "Str.h"
 
 #include <vcclr.h>          // cli/c++ pinning
@@ -32,43 +54,20 @@ int StrIndexOfAll_SSE2(const wchar_t * str, const wchar_t* chars, int charsLengt
     __m128i mergeCompare = zero;
     __m128i mergeIndex = zero;
 
-    // process begin of string, unalign part
-    if ((size_t)s & (__alignof(__m128i) - 1))
+    // don't use unalign load here, sse2 code here was slower then the c++ version on x64
+    for (; s < end && (size_t)s & (__alignof(__m128i) - 1); ++s)
     {
-        int unalignCount = (__alignof(__m128i) - (((uintptr_t)s) & (__alignof(__m128i) - 1))) >> 1;
-        unalignCount = unalignCount > count ? count : unalignCount;
-
-        int unalignEndMask = ~(0xFFFFFFFF << (unalignCount << 1));
-        __m128i  str128 = _mm_loadu_si128((__m128i const *)s);
-
         for (int i = 0; i < charsLength; ++i)
         {
-            __m128i  cmp = _mm_cmpeq_epi16(chars128[i], str128);
-            __m128i  cmpIndex = _mm_and_si128(cmp, charsIndex128[i]);
-            mergeCompare = _mm_or_si128(mergeCompare, cmp);
-            mergeIndex = _mm_or_si128(mergeIndex, cmpIndex);
-        }
-
-        unsigned v0 = _mm_movemask_epi8(mergeCompare);
-        v0 &= unalignEndMask;
-        if (v0)
-        {
-            do
+            const wchar_t c = chars[i];
+            if (*s == c)
             {
-                unsigned long traillingZero;
-                _BitScanForward(&traillingZero, v0);
-                const int offset = (traillingZero >> 1);
-                const wchar_t* c = s + offset;
-                *(resultCur++) = (int)(c - str);                       // string index in str
-                *(resultCur++) = mergeIndex.m128i_i16[offset];  // char index in chars
-                v0 &= ~(0x3 << traillingZero);                  // clear result char
-            } while (v0);
+                int index = (int)(s - str);
+                *(resultCur++) = index;   // string index in str
+                *(resultCur++) = i;       // char index in chars
+                break;
+            }
         }
-
-        mergeCompare = zero;
-        mergeIndex = zero;
-
-        s += unalignCount;
     }
 
     // process aligned string part
@@ -105,34 +104,19 @@ int StrIndexOfAll_SSE2(const wchar_t * str, const wchar_t* chars, int charsLengt
     }
 
     // process end of string, mask unwanted chars
-    if (s < end)
+    // process remaining string
+    for (; s < end; ++s)
     {
-        int remainingCount = (int)(end - s);
-        int unalignEndMask = ~(0xFFFFFFFF << (remainingCount << 1));
-        __m128i  str128 = _mm_load_si128((__m128i const *)s);
-
         for (int i = 0; i < charsLength; ++i)
         {
-            __m128i  cmp = _mm_cmpeq_epi16(chars128[i], str128);
-            __m128i  cmpIndex = _mm_and_si128(cmp, charsIndex128[i]);
-            mergeCompare = _mm_or_si128(mergeCompare, cmp);
-            mergeIndex = _mm_or_si128(mergeIndex, cmpIndex);
-        }
-
-        unsigned v0 = _mm_movemask_epi8(mergeCompare);
-        v0 &= unalignEndMask;
-        if (v0)
-        {
-            do
+            const wchar_t c = chars[i];
+            if (*s == c)
             {
-                unsigned long traillingZero;
-                _BitScanForward(&traillingZero, v0);
-                const int offset = (traillingZero >> 1);
-                const wchar_t* c = s + offset;
-                *(resultCur++) = (int)(c - str);                       // string index in str
-                *(resultCur++) = mergeIndex.m128i_i16[offset];  // char index in chars
-                v0 &= ~(0x3 << traillingZero);                  // clear result char
-            } while (v0);
+                int index = (int)(s - str);
+                *(resultCur++) = index;   // string index in str
+                *(resultCur++) = i;       // char index in chars
+                break;
+            }
         }
     }
 
@@ -146,6 +130,7 @@ int StrIndexOfAll_SSE2_V2(const wchar_t * str, const wchar_t* chars, int charsLe
 }
 #endif
 
+// not tested!
 int StrIndexOfAll_AVX2(const wchar_t * str, const wchar_t* chars, int charsLength, int startIndex, int count, int* results)
 {
     int* resultCur = results;
@@ -238,7 +223,6 @@ int StrIndexOfAll_CPP(const wchar_t * str, const wchar_t* chars, int charsLength
     const wchar_t* s = str + startIndex;
     const wchar_t* end = s + count;
 
-    // process remaining string
     for (; s < end; ++s)
     {
         for (int i = 0; i < charsLength; ++i)
@@ -249,6 +233,7 @@ int StrIndexOfAll_CPP(const wchar_t * str, const wchar_t* chars, int charsLength
                 int index = (int)(s - str);
                 *(resultCur++) = index;   // string index in str
                 *(resultCur++) = i;       // char index in chars
+                break;
             }
         }
     }
@@ -264,6 +249,12 @@ namespace Intrinsics
         {
             if (chars->Length > SearchCharsMax)
                 throw gcnew ArgumentOutOfRangeException(String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+
+            if (!str->Length)
+            {
+                resultsCount = 0;
+                return false;
+            }
 
             resultsCount = 0;
             int startIndex = 0;
@@ -291,6 +282,12 @@ namespace Intrinsics
             if (chars->Length > SearchCharsMax)
                 throw gcnew ArgumentOutOfRangeException(String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
 
+            if (!str->Length)
+            {
+                resultsCount = 0;
+                return false;
+            }
+
             if (startIndex < 0 || startIndex + 1 > str->Length)
                 throw gcnew ArgumentOutOfRangeException(L"startIndex must be greater than 0 and smaller than str length - 1");
 
@@ -317,6 +314,12 @@ namespace Intrinsics
         {
             if (chars->Length > SearchCharsMax)
                 throw gcnew ArgumentOutOfRangeException(String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+
+            if (!str->Length)
+            {
+                resultsCount = 0;
+                return false;
+            }
 
             if (startIndex < 0 || startIndex + 1 > str->Length)
                 throw gcnew ArgumentOutOfRangeException(L"startIndex must be greater than 0 and smaller than str length - 1");
@@ -348,6 +351,13 @@ namespace Intrinsics
             if (chars->Length > SearchCharsMax)
                 throw gcnew ArgumentOutOfRangeException(String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
 
+            if (!str->Length)
+            {
+                resultsCount = 0;
+                return false;
+            }
+
+
             if (startIndex < 0 || startIndex + 1 > str->Length)
                 throw gcnew ArgumentOutOfRangeException(L"startIndex must be greater than 0 and smaller than str length - 1");
 
@@ -370,6 +380,12 @@ namespace Intrinsics
         {
             if (chars->Length > SearchCharsMax)
                 throw gcnew ArgumentOutOfRangeException(String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+
+            if (!str->Length)
+            {
+                resultsCount = 0;
+                return false;
+            }
 
             if (startIndex < 0 || startIndex + 1 > str->Length)
                 throw gcnew ArgumentOutOfRangeException(L"startIndex must be greater than 0 and smaller than str length - 1");
@@ -398,6 +414,12 @@ namespace Intrinsics
         {
             if (chars->Length > SearchCharsMax)
                 throw gcnew ArgumentOutOfRangeException(String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+
+            if (!str->Length)
+            {
+                resultsCount = 0;
+                return false;
+            }
 
             if (startIndex < 0 || startIndex + 1 > str->Length)
                 throw gcnew ArgumentOutOfRangeException(L"startIndex must be greater than 0 and smaller than str length - 1");
