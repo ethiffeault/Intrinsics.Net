@@ -1,5 +1,7 @@
 #pragma once
 
+// https://msdn.microsoft.com/en-us/library/hskdteyh.aspx
+
 #include <vector>  
 #include <bitset>  
 #include <array>  
