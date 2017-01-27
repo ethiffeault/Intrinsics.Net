@@ -71,6 +71,7 @@ int StrIndexOfAll_SSE2(const wchar_t * str, const wchar_t* chars, int charsLengt
     }
 
     // process aligned string part
+    __m128i store;
     const wchar_t* alignEnd = end - 8;
     for (; s < alignEnd; s += 8)
     {
@@ -93,8 +94,9 @@ int StrIndexOfAll_SSE2(const wchar_t * str, const wchar_t* chars, int charsLengt
                 _BitScanForward(&traillingZero, v0);
                 const int offset = (traillingZero >> 1);
                 const wchar_t* c = s + offset;
-                *(resultCur++) = (int)(c - str);                       // string index in str
-                *(resultCur++) = mergeIndex.m128i_i16[offset];  // char index in chars
+                *(resultCur++) = (int)(c - str);                // string index in str
+                _mm_store_si128((__m128i*)&store, mergeIndex);
+                *(resultCur++) = store.m128i_i16[offset];
                 v0 &= ~(0x3 << traillingZero);                  // clear result char
             } while (v0);
 
