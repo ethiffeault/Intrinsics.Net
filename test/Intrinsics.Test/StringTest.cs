@@ -6,54 +6,58 @@ namespace IntrinsicsTest
 {
     public class StringTest : Test
     {
+        const int stringSizeMax = 1024 * 8;
+        const int stringCharsCount = 0;
+        int[] buckets = { 4, 8, 16, 32, 64, 92, 128, 256, 512, 768, 1024, 2048, 4096, stringSizeMax };
         const string possiblesChar = "012345679abcdefgzhjklmnopqrstuvwxyz";
         const string searchChars = "[](){}";
-        private const int stringSizeMin = 0;
-        private const int stringSizeMax = 1024;
-        private const int stringsCount = 1024;
-        private const int stringCharsCount = 4;
-        private string[] strings = new string[stringsCount];
+        private const int stringsPerBucket = 1024 * 1;
+        private string[] strings;
         private Intrinsics.String.MatchIndex[] results = new Intrinsics.String.MatchIndex[stringSizeMax];
 
         public StringTest()
-            : base("IndexOfAll")
+            : base("String")
         {
-            int stringSizeIncrement = (stringSizeMax - stringSizeMin) / stringsCount;
+            strings = new string[stringsPerBucket * buckets.Length];
 
             Random random = new Random();
             StringBuilder builder = new StringBuilder(stringSizeMax);
-
-            int stringSize = stringSizeMin;
-            for (int i = 0; i < stringsCount; ++i)
+            int stringLengthMin = 0;
+            for (int bucketIndex = 0; bucketIndex < buckets.Length; ++bucketIndex)
             {
-                builder.Clear();
+                int stringLengthMax = buckets[bucketIndex];
 
-                for (int c = 0; c < stringSize; ++c)
-                    builder.Append(possiblesChar[random.Next(0, possiblesChar.Length)]);
-
-                if (stringSize != 0)
+                int stringLength = stringLengthMin;
+                for (int i = 0; i < stringsPerBucket; ++i)
                 {
-                    for (int j = 0; j < stringCharsCount; ++j)
-                        builder[random.Next(0, stringSize)] = searchChars[random.Next(0, searchChars.Length)];
+                    builder.Clear();
+                    for (int c = 0; c < stringLength; ++c)
+                        builder.Append(possiblesChar[random.Next(0, possiblesChar.Length)]);
+
+                    if (stringLength != 0)
+                    {
+                        for (int j = 0; j < stringCharsCount; ++j)
+                            builder[random.Next(0, stringLength)] = searchChars[random.Next(0, searchChars.Length)];
+                    }
+
+                    strings[bucketIndex * stringsPerBucket + i] = builder.ToString();
+
+                    if (++stringLength >= stringLengthMax)
+                        stringLength = stringLengthMin;
                 }
 
-                strings[i] = builder.ToString();
-
-                if (i == stringsCount - 2)
-                    stringSize = stringSizeMax;
-                else
-                    stringSize += stringSizeIncrement;
+                stringLengthMin = stringLengthMax;
             }
         }
 
         public override void RunTest()
         {
-            for (int i = 0; i < stringsCount; ++i)
+            for (int i = 0; i < strings.Length; ++i)
             {
                 string s = strings[i];
                 TestIndexOfAll(s, searchChars, 0, s.Length);
 
-                if (i == (stringsCount / 2))
+                if (i == (strings.Length / 2))
                 {
                     for (int startIndex = 0; startIndex < s.Length - 1; ++startIndex)
                     {
@@ -77,85 +81,66 @@ namespace IntrinsicsTest
 
         public override void RunProfile()
         {
-            int[] buckets = { 4, 8, 16, 32, 64, 92, 128, 256, 512, 768, stringSizeMax };
             Stopwatch[] times = new Stopwatch[(int)IndexOfAll.Count];
             for (int i = 0; i < times.Length; ++i)
                 times[i] = new Stopwatch();
 
-            string[] searchPatterns = { "@#$%" };
-            //string[] searchPatterns = { searchChars, " ", "!", searchChars.Substring(0, 1)};
             bool outputHeader = true;
-            int stringIndex = 0;
+
             for (int bucketIndex = 0; bucketIndex < buckets.Length; ++bucketIndex)
             {
-                for (int i = 0; i < times.Length; ++i)
-                    times[i].Reset();
-
-                // buck run
-                int bucketRun = 1024 * 32;
-                int currentBucketRun = 0;
-
-                while (currentBucketRun < bucketRun)
+                for (int i = 0; i < stringsPerBucket; ++i)
                 {
-                    if (bucketIndex == 0)
-                        stringIndex = 0;
-                    else
-                        stringIndex = buckets[bucketIndex - 1];
+                    int stringIndex = bucketIndex * stringsPerBucket + i;
 
-                    for (int searchIndex = 0; searchIndex < searchPatterns.Length && currentBucketRun < bucketRun; ++searchIndex)
-                    {
-                        for (; stringIndex < buckets[bucketIndex] && currentBucketRun < bucketRun; ++stringIndex, ++currentBucketRun)
-                        {
-                            string s = strings[stringIndex];
-                            int resultsCount;
-                            bool haveMatch;
+                    string s = strings[stringIndex];
+                    int resultsCount;
+                    bool haveMatch;
 
-                            // cache warmup size
-                            int warmupSize = s.Length == 0 ? 0 : 1;
+                    // cache warmup size
+                    int warmupSize = s.Length == 0 ? 0 : 1;
 
-                            haveMatch = Intrinsics.String.IndexOfAll(s, searchChars, ref results, out resultsCount, 0, warmupSize);
-                            times[(int)IndexOfAll.Sse].Start();
-                            haveMatch = Intrinsics.String.IndexOfAll(s, searchChars, ref results, out resultsCount, 0, s.Length);
-                            times[(int)IndexOfAll.Sse].Stop();
+                    haveMatch = Intrinsics.String.IndexOfAll(s, searchChars, ref results, out resultsCount, 0, warmupSize);
+                    times[(int)IndexOfAll.Sse].Start();
+                    haveMatch = Intrinsics.String.IndexOfAll(s, searchChars, ref results, out resultsCount, 0, s.Length);
+                    times[(int)IndexOfAll.Sse].Stop();
 
-                            haveMatch = Intrinsics.String.IndexOfAllCli(s, searchChars, ref results, out resultsCount, 0, warmupSize);
-                            times[(int)IndexOfAll.Cli].Start();
-                            haveMatch = Intrinsics.String.IndexOfAllCli(s, searchChars, ref results, out resultsCount, 0, s.Length);
-                            times[(int)IndexOfAll.Cli].Stop();
+                    haveMatch = Intrinsics.String.IndexOfAllCli(s, searchChars, ref results, out resultsCount, 0, warmupSize);
+                    times[(int)IndexOfAll.Cli].Start();
+                    haveMatch = Intrinsics.String.IndexOfAllCli(s, searchChars, ref results, out resultsCount, 0, s.Length);
+                    times[(int)IndexOfAll.Cli].Stop();
 
-                            haveMatch = StringCs.IndexOfAll(s, searchChars, ref results, out resultsCount, 0, warmupSize);
-                            times[(int)IndexOfAll.Cs].Start();
-                            haveMatch = StringCs.IndexOfAll(s, searchChars, ref results, out resultsCount, 0, s.Length);
-                            times[(int)IndexOfAll.Cs].Stop();
+                    haveMatch = StringCs.IndexOfAll(s, searchChars, ref results, out resultsCount, 0, warmupSize);
+                    times[(int)IndexOfAll.Cs].Start();
+                    haveMatch = StringCs.IndexOfAll(s, searchChars, ref results, out resultsCount, 0, s.Length);
+                    times[(int)IndexOfAll.Cs].Stop();
 
-                            haveMatch = Intrinsics.String.IndexOfAllCpp(s, searchChars, ref results, out resultsCount, 0, warmupSize);
-                            times[(int)IndexOfAll.Cpp].Start();
-                            haveMatch = Intrinsics.String.IndexOfAllCpp(s, searchChars, ref results, out resultsCount, 0, s.Length);
-                            times[(int)IndexOfAll.Cpp].Stop();
+                    haveMatch = Intrinsics.String.IndexOfAllCpp(s, searchChars, ref results, out resultsCount, 0, warmupSize);
+                    times[(int)IndexOfAll.Cpp].Start();
+                    haveMatch = Intrinsics.String.IndexOfAllCpp(s, searchChars, ref results, out resultsCount, 0, s.Length);
+                    times[(int)IndexOfAll.Cpp].Stop();
 
-                            haveMatch = Intrinsics.String.IndexOfAllWip(s, searchChars, ref results, out resultsCount, 0, warmupSize);
-                            times[(int)IndexOfAll.SseV2].Start();
-                            haveMatch = Intrinsics.String.IndexOfAllWip(s, searchChars, ref results, out resultsCount, 0, s.Length);
-                            times[(int)IndexOfAll.SseV2].Stop();
-                        }
-                    }
+                    haveMatch = Intrinsics.String.IndexOfAllWip(s, searchChars, ref results, out resultsCount, 0, warmupSize);
+                    times[(int)IndexOfAll.SseV2].Start();
+                    haveMatch = Intrinsics.String.IndexOfAllWip(s, searchChars, ref results, out resultsCount, 0, s.Length);
+                    times[(int)IndexOfAll.SseV2].Stop();
                 }
 
                 // write bucket stats!
                 if (outputHeader)
                 {
-                    System.Console.WriteLine("length        cli          cs         cpp          v2         sse");
+                    System.Console.WriteLine("length        ss3          cs         cpp         cli         wip");
                     outputHeader = false;
                 }
 
                 System.Console.WriteLine(
                     "{0,6}      {1,5:####0.0}       {2,5:####0.0}       {3,5:####0.0}       {4,5:####0.0}       {5,5:####0.0}",
                     buckets[bucketIndex],
-                    (float)((double)times[(int)IndexOfAll.Cli].ElapsedTicks / (double)times[(int)IndexOfAll.Sse].ElapsedTicks),
+                    1.0f,
                     (float)((double)times[(int)IndexOfAll.Cs].ElapsedTicks / (double)times[(int)IndexOfAll.Sse].ElapsedTicks),
                     (float)((double)times[(int)IndexOfAll.Cpp].ElapsedTicks / (double)times[(int)IndexOfAll.Sse].ElapsedTicks),
-                    (float)((double)times[(int)IndexOfAll.SseV2].ElapsedTicks / (double)times[(int)IndexOfAll.Sse].ElapsedTicks),
-                    1.0f
+                    (float)((double)times[(int)IndexOfAll.Cli].ElapsedTicks / (double)times[(int)IndexOfAll.Sse].ElapsedTicks),
+                    (float)((double)times[(int)IndexOfAll.SseV2].ElapsedTicks / (double)times[(int)IndexOfAll.Sse].ElapsedTicks)
                 );
             }
         }
