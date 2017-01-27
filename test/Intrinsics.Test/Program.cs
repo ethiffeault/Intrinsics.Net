@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Text;
 using System.Diagnostics;
-using Intrinsics;
 
-namespace Intrinsics.Test
+namespace IntrinsicsTest
 {
     class Program
     {

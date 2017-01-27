@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Text;
 using System.Diagnostics;
-using Intrinsics;
 using System.Collections.Generic;
 
-namespace Intrinsics.Test
+namespace IntrinsicsTest
 {
 
     public abstract class Test

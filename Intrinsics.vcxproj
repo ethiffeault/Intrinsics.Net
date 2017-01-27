@@ -159,12 +159,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="InstructionSet.h" />
-    <ClInclude Include="Str.h" />
+    <ClInclude Include="String.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="InstructionSet.cpp" />
-    <ClCompile Include="Str.cpp" />
+    <ClCompile Include="String.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

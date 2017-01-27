@@ -20,7 +20,7 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //  SOFTWARE.
 
-#include "Str.h"
+#include "String.h"
 
 #include <vcclr.h>          // cli/c++ pinning
 #include <intrin.h>         // intrinsics
@@ -245,10 +245,10 @@ int StrIndexOfAll_CPP(const wchar_t * str, const wchar_t* chars, int charsLength
 
 namespace Intrinsics
 {
-        bool __clrcall Str::IndexOfAll(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount)
+        bool __clrcall String::IndexOfAll(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount)
         {
             if (chars->Length > SearchCharsMax)
-                throw gcnew ArgumentOutOfRangeException(String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+                throw gcnew ArgumentOutOfRangeException(System::String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
 
             if (!str->Length)
             {
@@ -277,10 +277,10 @@ namespace Intrinsics
             return resultsCount != 0;
         }
 
-        bool __clrcall Str::IndexOfAll(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex)
+        bool __clrcall String::IndexOfAll(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex)
         {
             if (chars->Length > SearchCharsMax)
-                throw gcnew ArgumentOutOfRangeException(String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+                throw gcnew ArgumentOutOfRangeException(System::String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
 
             if (!str->Length)
             {
@@ -310,10 +310,10 @@ namespace Intrinsics
             return resultsCount != 0;
         }
 
-        bool __clrcall Str::IndexOfAll(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count)
+        bool __clrcall String::IndexOfAll(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count)
         {
             if (chars->Length > SearchCharsMax)
-                throw gcnew ArgumentOutOfRangeException(String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+                throw gcnew ArgumentOutOfRangeException(System::String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
 
             if (!str->Length)
             {
@@ -346,10 +346,10 @@ namespace Intrinsics
 
 #ifdef INTRINSICS_TEST
 
-        bool __clrcall Str::IndexOfAllV2(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count)
+        bool __clrcall String::IndexOfAllV2(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count)
         {
             if (chars->Length > SearchCharsMax)
-                throw gcnew ArgumentOutOfRangeException(String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+                throw gcnew ArgumentOutOfRangeException(System::String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
 
             if (!str->Length)
             {
@@ -376,10 +376,10 @@ namespace Intrinsics
             return resultsCount != 0;
         }
 
-        bool __clrcall Str::IndexOfAllCli(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count)
+        bool __clrcall String::IndexOfAllCli(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count)
         {
             if (chars->Length > SearchCharsMax)
-                throw gcnew ArgumentOutOfRangeException(String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+                throw gcnew ArgumentOutOfRangeException(System::String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
 
             if (!str->Length)
             {
@@ -410,10 +410,10 @@ namespace Intrinsics
             return resultsCount != 0;
         }
 
-        bool __clrcall Str::IndexOfAllCpp(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count)
+        bool __clrcall String::IndexOfAllCpp(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count)
         {
             if (chars->Length > SearchCharsMax)
-                throw gcnew ArgumentOutOfRangeException(String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+                throw gcnew ArgumentOutOfRangeException(System::String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
 
             if (!str->Length)
             {

@@ -7,8 +7,8 @@
     <ProjectGuid>{B83A0F3C-82DD-47E5-9AD4-BAEE83D153C9}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Intrinsics.Test</RootNamespace>
-    <AssemblyName>Intrinsics.Test</AssemblyName>
+    <RootNamespace>IntrinsicsTest</RootNamespace>
+    <AssemblyName>IntrinsicsTest</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

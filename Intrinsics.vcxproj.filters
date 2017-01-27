@@ -2,11 +2,11 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="InstructionSet.h" />
-    <ClInclude Include="Str.h" />
+    <ClInclude Include="String.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="InstructionSet.cpp" />
-    <ClCompile Include="Str.cpp" />
+    <ClCompile Include="String.cpp" />
   </ItemGroup>
 </Project>
