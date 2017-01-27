@@ -6,14 +6,24 @@ namespace IntrinsicsTest
 {
     public class StringTest : Test
     {
-        const int stringSizeMax = 1024 * 8;
-        const int stringCharsCount = 0;
-        int[] buckets = { 4, 8, 16, 32, 64, 92, 128, 256, 512, 768, 1024, 2048, 4096, stringSizeMax };
-        const string possiblesChar = "012345679abcdefgzhjklmnopqrstuvwxyz";
-        const string searchChars = "[](){}";
+        private const int stringSizeMax = 1024 * 8;
+        private const int stringCharsCount = 0;
+        private int[] buckets = { 4, 8, 16, 32, 64, 92, 128, 256, 512, 768, 1024, 2048, 4096, stringSizeMax };
+        private const string possiblesChar = "012345679abcdefgzhjklmnopqrstuvwxyz";
+        private const string searchChars = "[](){}";
         private const int stringsPerBucket = 1024 * 1;
         private string[] strings;
         private Intrinsics.String.MatchIndex[] results = new Intrinsics.String.MatchIndex[stringSizeMax];
+
+        private enum IndexOfAll
+        {
+            Sse,
+            SseV2,
+            Cli,
+            Cs,
+            Cpp,
+            Count
+        }
 
         public StringTest()
             : base("String")
@@ -67,16 +77,6 @@ namespace IntrinsicsTest
                     }
                 }
             }
-        }
-
-        enum IndexOfAll
-        {
-            Sse,
-            SseV2,
-            Cli,
-            Cs,
-            Cpp,
-            Count
         }
 
         public override void RunProfile()

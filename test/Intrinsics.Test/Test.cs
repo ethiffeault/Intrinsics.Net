@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
 
 namespace IntrinsicsTest
 {
-
     public abstract class Test
     {
-        public string Name { get; private set;}
+        public string Name { get; private set; }
 
         public Test(string name)
         {
@@ -61,7 +59,7 @@ namespace IntrinsicsTest
         private List<List<string>> _rows = new List<List<string>>(64);
 
         public SpreadsheetWriter()
-        { 
+        {
         }
 
         public void Clear()
@@ -92,7 +90,5 @@ namespace IntrinsicsTest
                 }
             }
         }
-
     }
-
 }

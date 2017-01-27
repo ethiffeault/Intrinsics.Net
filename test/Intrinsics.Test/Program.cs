@@ -1,7 +1,4 @@
-﻿using System;
-using System.Text;
-using System.Diagnostics;
-
+﻿
 namespace IntrinsicsTest
 {
     class Program
