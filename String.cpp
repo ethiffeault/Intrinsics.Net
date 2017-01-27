@@ -245,6 +245,192 @@ int StrIndexOfAll_CPP(const wchar_t * str, const wchar_t* chars, int charsLength
 
 namespace Intrinsics
 {
+    bool __clrcall String::IndexOfAll(System::String ^ str, wchar_t c, array<MatchIndex >^% results, [Out] int% resultsCount)
+    {
+        if (!str->Length)
+        {
+            resultsCount = 0;
+            return false;
+        }
+
+        resultsCount = 0;
+        int startIndex = 0;
+        int count = str->Length;
+
+        // realloc the to maximum possible results size if needed
+        if (results->Length < str->Length)
+            results = gcnew array<MatchIndex >(str->Length);
+
+        pin_ptr<const wchar_t> pinStr = PtrToStringChars(str);
+        pin_ptr<MatchIndex > pinResults = &results[0];
+
+        if (CpuSupportAvx2)
+            resultsCount = StrIndexOfAll_AVX2(pinStr, &c, 1, startIndex, count, (int*)pinResults);
+        else if (CpuSupportSse2)
+            resultsCount = StrIndexOfAll_SSE2(pinStr, &c, 1, startIndex, count, (int*)pinResults);
+        else
+            resultsCount = StrIndexOfAll_CPP(pinStr, &c, 1, startIndex, count, (int*)pinResults);
+        return resultsCount != 0;
+    }
+
+    bool __clrcall String::IndexOfAll(System::String ^ str, wchar_t c, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex)
+    {
+        if (!str->Length)
+        {
+            resultsCount = 0;
+            return false;
+        }
+
+        if (startIndex < 0 || startIndex + 1 > str->Length)
+            throw gcnew ArgumentOutOfRangeException(L"startIndex must be greater than 0 and smaller than str length - 1");
+
+        int count = str->Length - startIndex;
+
+        // realloc the to maximum possible results size if needed
+        if (results->Length < str->Length)
+            results = gcnew array<MatchIndex >(str->Length);
+
+        pin_ptr<const wchar_t> pinStr = PtrToStringChars(str);
+        pin_ptr<MatchIndex > pinResults = &results[0];
+
+        if (CpuSupportAvx2)
+            resultsCount = StrIndexOfAll_AVX2(pinStr, &c, 1, startIndex, count, (int*)pinResults);
+        else if (CpuSupportSse2)
+            resultsCount = StrIndexOfAll_SSE2(pinStr, &c, 1, startIndex, count, (int*)pinResults);
+        else
+            resultsCount = StrIndexOfAll_CPP(pinStr, &c, 1, startIndex, count, (int*)pinResults);
+        return resultsCount != 0;
+    }
+
+    bool __clrcall String::IndexOfAll(System::String ^ str, wchar_t c, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count)
+    {
+        if (!str->Length)
+        {
+            resultsCount = 0;
+            return false;
+        }
+
+        if (startIndex < 0 || startIndex + 1 > str->Length)
+            throw gcnew ArgumentOutOfRangeException(L"startIndex must be greater than 0 and smaller than str length - 1");
+
+        if (count > str->Length - startIndex)
+            throw gcnew ArgumentOutOfRangeException(L"count must be smaller than str - startIndex");
+
+        // realloc the to maximum possible results size if needed
+        if (results->Length < str->Length)
+            results = gcnew array<MatchIndex >(str->Length);
+
+        pin_ptr<const wchar_t> pinStr = PtrToStringChars(str);
+        pin_ptr<MatchIndex > pinResults = &results[0];
+
+        if (CpuSupportAvx2)
+            resultsCount = StrIndexOfAll_AVX2(pinStr, &c, 1, startIndex, count, (int*)pinResults);
+        else if (CpuSupportSse2)
+            resultsCount = StrIndexOfAll_SSE2(pinStr, &c, 1, startIndex, count, (int*)pinResults);
+        else
+            resultsCount = StrIndexOfAll_CPP(pinStr, &c, 1, startIndex, count, (int*)pinResults);
+        return resultsCount != 0;
+    }
+
+    bool __clrcall String::IndexOfAll(System::String ^ str, array<wchar_t>^ chars, array<MatchIndex >^% results, [Out] int% resultsCount)
+    {
+        if (chars->Length > SearchCharsMax)
+            throw gcnew ArgumentOutOfRangeException(System::String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+
+        if (!str->Length)
+        {
+            resultsCount = 0;
+            return false;
+        }
+
+        resultsCount = 0;
+        int startIndex = 0;
+        int count = str->Length;
+
+        // realloc the to maximum possible results size if needed
+        if (results->Length < str->Length)
+            results = gcnew array<MatchIndex >(str->Length);
+
+        pin_ptr<const wchar_t> pinStr = PtrToStringChars(str);
+        pin_ptr<const wchar_t> pinChars = &chars[0];
+        pin_ptr<MatchIndex > pinResults = &results[0];
+
+        if (CpuSupportAvx2)
+            resultsCount = StrIndexOfAll_AVX2(pinStr, pinChars, chars->Length, startIndex, count, (int*)pinResults);
+        else if (CpuSupportSse2)
+            resultsCount = StrIndexOfAll_SSE2(pinStr, pinChars, chars->Length, startIndex, count, (int*)pinResults);
+        else
+            resultsCount = StrIndexOfAll_CPP(pinStr, pinChars, chars->Length, startIndex, count, (int*)pinResults);
+        return resultsCount != 0;
+    }
+
+    bool __clrcall String::IndexOfAll(System::String ^ str, array<wchar_t>^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex)
+    {
+        if (chars->Length > SearchCharsMax)
+            throw gcnew ArgumentOutOfRangeException(System::String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+
+        if (!str->Length)
+        {
+            resultsCount = 0;
+            return false;
+        }
+
+        if (startIndex < 0 || startIndex + 1 > str->Length)
+            throw gcnew ArgumentOutOfRangeException(L"startIndex must be greater than 0 and smaller than str length - 1");
+
+        int count = str->Length - startIndex;
+
+        // realloc the to maximum possible results size if needed
+        if (results->Length < str->Length)
+            results = gcnew array<MatchIndex >(str->Length);
+
+        pin_ptr<const wchar_t> pinStr = PtrToStringChars(str);
+        pin_ptr<const wchar_t> pinChars = &chars[0];
+        pin_ptr<MatchIndex > pinResults = &results[0];
+
+        if (CpuSupportAvx2)
+            resultsCount = StrIndexOfAll_AVX2(pinStr, pinChars, chars->Length, startIndex, count, (int*)pinResults);
+        else if (CpuSupportSse2)
+            resultsCount = StrIndexOfAll_SSE2(pinStr, pinChars, chars->Length, startIndex, count, (int*)pinResults);
+        else
+            resultsCount = StrIndexOfAll_CPP(pinStr, pinChars, chars->Length, startIndex, count, (int*)pinResults);
+        return resultsCount != 0;
+    }
+
+    bool __clrcall String::IndexOfAll(System::String ^ str, array<wchar_t>^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count)
+    {
+        if (chars->Length > SearchCharsMax)
+            throw gcnew ArgumentOutOfRangeException(System::String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+
+        if (!str->Length)
+        {
+            resultsCount = 0;
+            return false;
+        }
+
+        if (startIndex < 0 || startIndex + 1 > str->Length)
+            throw gcnew ArgumentOutOfRangeException(L"startIndex must be greater than 0 and smaller than str length - 1");
+
+        if (count > str->Length - startIndex)
+            throw gcnew ArgumentOutOfRangeException(L"count must be smaller than str - startIndex");
+
+        // realloc the to maximum possible results size if needed
+        if (results->Length < str->Length)
+            results = gcnew array<MatchIndex >(str->Length);
+
+        pin_ptr<const wchar_t> pinStr = PtrToStringChars(str);
+        pin_ptr<const wchar_t> pinChars = &chars[0];
+        pin_ptr<MatchIndex > pinResults = &results[0];
+
+        if (CpuSupportAvx2)
+            resultsCount = StrIndexOfAll_AVX2(pinStr, pinChars, chars->Length, startIndex, count, (int*)pinResults);
+        else if (CpuSupportSse2)
+            resultsCount = StrIndexOfAll_SSE2(pinStr, pinChars, chars->Length, startIndex, count, (int*)pinResults);
+        else
+            resultsCount = StrIndexOfAll_CPP(pinStr, pinChars, chars->Length, startIndex, count, (int*)pinResults);
+        return resultsCount != 0;
+    }
+
     bool __clrcall String::IndexOfAll(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount)
     {
         if (chars->Length > SearchCharsMax)

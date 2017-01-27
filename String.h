@@ -48,6 +48,18 @@ namespace Intrinsics
 
         literal int SearchCharsMax = Intrinsics::SearchCharsMax;
 
+        static bool __clrcall IndexOfAll(System::String ^ str, wchar_t c, array<MatchIndex >^% results, [Out] int% resultsCount);
+
+        static bool __clrcall IndexOfAll(System::String ^ str, wchar_t c, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex);
+
+        static bool __clrcall IndexOfAll(System::String ^ str, wchar_t c, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count);
+
+        static bool __clrcall IndexOfAll(System::String ^ str, array<wchar_t>^ c, array<MatchIndex >^% results, [Out] int% resultsCount);
+
+        static bool __clrcall IndexOfAll(System::String ^ str, array<wchar_t>^ c, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex);
+
+        static bool __clrcall IndexOfAll(System::String ^ str, array<wchar_t>^ c, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count);
+
         static bool __clrcall IndexOfAll(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount);
 
         static bool __clrcall IndexOfAll(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex);
