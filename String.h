@@ -55,7 +55,7 @@ namespace Intrinsics
         static bool __clrcall IndexOfAll(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count);
 
 #ifdef INTRINSICS_TEST
-        static bool __clrcall IndexOfAllV2(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count);
+        static bool __clrcall IndexOfAllWip(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count);
 
         static bool __clrcall IndexOfAllCli(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count);
 

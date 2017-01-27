@@ -4,8 +4,7 @@ using System.Diagnostics;
 
 namespace IntrinsicsTest
 {
-
-    public class StrIndexOfAllTest : Test
+    public class StringTest : Test
     {
         const string possiblesChar = "012345679abcdefgzhjklmnopqrstuvwxyz";
         const string searchChars = "[](){}";
@@ -16,7 +15,7 @@ namespace IntrinsicsTest
         private string[] strings = new string[stringsCount];
         private Intrinsics.String.MatchIndex[] results = new Intrinsics.String.MatchIndex[stringSizeMax];
 
-        public StrIndexOfAllTest()
+        public StringTest()
             : base("IndexOfAll")
         {
             int stringSizeIncrement = (stringSizeMax - stringSizeMin) / stringsCount;
@@ -54,7 +53,7 @@ namespace IntrinsicsTest
                 string s = strings[i];
                 TestIndexOfAll(s, searchChars, 0, s.Length);
 
-                if (i == (stringsCount/2))
+                if (i == (stringsCount / 2))
                 {
                     for (int startIndex = 0; startIndex < s.Length - 1; ++startIndex)
                     {
@@ -101,7 +100,7 @@ namespace IntrinsicsTest
                     if (bucketIndex == 0)
                         stringIndex = 0;
                     else
-                        stringIndex = buckets[bucketIndex-1];
+                        stringIndex = buckets[bucketIndex - 1];
 
                     for (int searchIndex = 0; searchIndex < searchPatterns.Length && currentBucketRun < bucketRun; ++searchIndex)
                     {
@@ -124,9 +123,9 @@ namespace IntrinsicsTest
                             haveMatch = Intrinsics.String.IndexOfAllCli(s, searchChars, ref results, out resultsCount, 0, s.Length);
                             times[(int)IndexOfAll.Cli].Stop();
 
-                            haveMatch = StrIndexOfAllTestCs.IndexOfAllCs(s, searchChars, ref results, out resultsCount, 0, warmupSize);
+                            haveMatch = StringCs.IndexOfAll(s, searchChars, ref results, out resultsCount, 0, warmupSize);
                             times[(int)IndexOfAll.Cs].Start();
-                            haveMatch = StrIndexOfAllTestCs.IndexOfAllCs(s, searchChars, ref results, out resultsCount, 0, s.Length);
+                            haveMatch = StringCs.IndexOfAll(s, searchChars, ref results, out resultsCount, 0, s.Length);
                             times[(int)IndexOfAll.Cs].Stop();
 
                             haveMatch = Intrinsics.String.IndexOfAllCpp(s, searchChars, ref results, out resultsCount, 0, warmupSize);
@@ -134,9 +133,9 @@ namespace IntrinsicsTest
                             haveMatch = Intrinsics.String.IndexOfAllCpp(s, searchChars, ref results, out resultsCount, 0, s.Length);
                             times[(int)IndexOfAll.Cpp].Stop();
 
-                            haveMatch = Intrinsics.String.IndexOfAllV2(s, searchChars, ref results, out resultsCount, 0, warmupSize);
+                            haveMatch = Intrinsics.String.IndexOfAllWip(s, searchChars, ref results, out resultsCount, 0, warmupSize);
                             times[(int)IndexOfAll.SseV2].Start();
-                            haveMatch = Intrinsics.String.IndexOfAllV2(s, searchChars, ref results, out resultsCount, 0, s.Length);
+                            haveMatch = Intrinsics.String.IndexOfAllWip(s, searchChars, ref results, out resultsCount, 0, s.Length);
                             times[(int)IndexOfAll.SseV2].Stop();
                         }
                     }
@@ -158,14 +157,7 @@ namespace IntrinsicsTest
                     (float)((double)times[(int)IndexOfAll.SseV2].ElapsedTicks / (double)times[(int)IndexOfAll.Sse].ElapsedTicks),
                     1.0f
                 );
-
-
             }
-
-
-            
-
-
         }
 
         public override void OutputProfile(SpreadsheetWriter writer)
@@ -180,7 +172,7 @@ namespace IntrinsicsTest
 
             Intrinsics.String.MatchIndex[] csResult = new Intrinsics.String.MatchIndex[s.Length];
             int csResultCount;
-            StrIndexOfAllTestCs.IndexOfAllCs(s, chars, ref csResult, out csResultCount, startIndex, count);
+            StringCs.IndexOfAll(s, chars, ref csResult, out csResultCount, startIndex, count);
 
             Intrinsics.String.MatchIndex[] cliResult = new Intrinsics.String.MatchIndex[s.Length];
             int cliResultCount;
@@ -188,7 +180,7 @@ namespace IntrinsicsTest
 
             Intrinsics.String.MatchIndex[] v2Result = new Intrinsics.String.MatchIndex[s.Length];
             int v2ResultCount;
-            Intrinsics.String.IndexOfAllV2(s, chars, ref v2Result, out v2ResultCount, startIndex, count);
+            Intrinsics.String.IndexOfAllWip(s, chars, ref v2Result, out v2ResultCount, startIndex, count);
 
             Intrinsics.String.MatchIndex[] cppResult = new Intrinsics.String.MatchIndex[s.Length];
             int cppResultCount;
@@ -210,13 +202,13 @@ namespace IntrinsicsTest
                 CheckTrue(sseResult[j].CharIndex == cliResult[j].CharIndex);
                 CheckTrue(sseResult[j].CharIndex == cppResult[j].CharIndex);
                 CheckTrue(sseResult[j].CharIndex == v2Result[j].CharIndex);
-            }            
+            }
         }
     }
 
-    public static class StrIndexOfAllTestCs
+    public static class StringCs
     {
-        public static bool IndexOfAllCs(string str, string chars, ref Intrinsics.String.MatchIndex[] results, out int resultCount, int startIndex, int count)
+        public static bool IndexOfAll(string str, string chars, ref Intrinsics.String.MatchIndex[] results, out int resultCount, int startIndex, int count)
         {
             if (chars.Length > Intrinsics.String.SearchCharsMax)
                 throw new ArgumentOutOfRangeException(String.Format("chars length must be smaller than {0}", Intrinsics.String.SearchCharsMax));
@@ -253,5 +245,4 @@ namespace IntrinsicsTest
             return resultCount != 0;
         }
     }
-
 }

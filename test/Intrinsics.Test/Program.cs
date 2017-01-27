@@ -8,7 +8,7 @@ namespace IntrinsicsTest
     {
         static void Main(string[] args)
         {
-            StrIndexOfAllTest test = new StrIndexOfAllTest();
+            StringTest test = new StringTest();
             //test.RunTest();
             test.RunProfile();
             System.Console.ReadKey();
