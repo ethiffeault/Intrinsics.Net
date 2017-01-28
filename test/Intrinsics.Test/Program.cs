@@ -6,7 +6,7 @@ namespace IntrinsicsTest
         static void Main(string[] args)
         {
             StringTest test = new StringTest();
-            //test.RunTest();
+            test.RunTest();
             test.RunProfile();
             System.Console.ReadKey();
         }

@@ -241,6 +241,81 @@ int StrIndexOfAll_CPP(const wchar_t * str, const wchar_t* chars, int charsLength
     return (int)(resultCur - results) >> 1;
 }
 
+int StrIndexOfAny_SSE2(const wchar_t * str, const wchar_t* chars, int charsLength, int startIndex, int count)
+{
+    __m128i zero = _mm_setzero_si128();
+    __m128i chars128[Intrinsics::SearchCharsMax];
+    __m128i mergeCompare = zero;
+    for (int i = 0; i < charsLength; ++i)
+        chars128[i] = _mm_set1_epi16(chars[i]);
+
+    const wchar_t* s = str + startIndex;
+    const wchar_t* end = s + count;
+    for (; s < end && (size_t)s & (__alignof(__m128i) - 1); ++s)
+    {
+        for (int i = 0; i < charsLength; ++i)
+        {
+            const wchar_t c = chars[i];
+            if (*s == c)
+                return (int)(s - str);
+        }
+    }
+    if (s == end)
+        return -1;
+
+    // process aligned string part
+    const wchar_t* alignEnd = end - 8;
+    for (; s < alignEnd; s += 8)
+    {
+        __m128i  str128 = _mm_load_si128((__m128i const *)s);
+
+        for (int i = 0; i < charsLength; ++i)
+        {
+            __m128i  cmp = _mm_cmpeq_epi16(chars128[i], str128);
+            mergeCompare = _mm_or_si128(mergeCompare, cmp);
+        }
+
+        unsigned v0 = _mm_movemask_epi8(mergeCompare);
+        if (v0)
+        {
+            unsigned long traillingZero;
+            _BitScanForward(&traillingZero, v0);
+            const int offset = (traillingZero >> 1);
+            const wchar_t* c = s + offset;
+            return (int)(c - str);
+        }
+    }
+
+    // process remaining string
+    for (; s < end; ++s)
+    {
+        for (int i = 0; i < charsLength; ++i)
+        {
+            const wchar_t c = chars[i];
+            if (*s == c)
+                return (int)(s - str);
+        }
+    }
+
+    return -1;
+}
+
+
+int StrIndexOfAny_CPP(const wchar_t * str, const wchar_t* chars, int charsLength, int startIndex, int count)
+{
+    const wchar_t* s = str + startIndex;
+    const wchar_t* end = s + count;
+    for (; s < end; ++s)
+    {
+        for (int i = 0; i < charsLength; ++i)
+        {
+            if (*s == chars[i])
+                return (int)(s - str);
+        }
+    }
+    return -1;
+}
+
 #pragma managed
 
 namespace Intrinsics
@@ -530,7 +605,67 @@ namespace Intrinsics
         return resultsCount != 0;
     }
 
+    int __clrcall String::IndexOfAny(System::String ^ str, array<wchar_t>^ anyOf)
+    {
+        if (anyOf == nullptr)
+            throw gcnew ArgumentNullException("anyOf is null");
+
+        if (anyOf->Length > SearchCharsMax)
+            throw gcnew ArgumentOutOfRangeException(System::String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+
+        if (!str->Length)
+            return -1;
+
+        pin_ptr<const wchar_t> pinStr = PtrToStringChars(str);
+        pin_ptr<const wchar_t> pinChars = &anyOf[0];
+        return StrIndexOfAny_SSE2(pinStr, pinChars, anyOf->Length, 0, str->Length);
+    }
+
+    int __clrcall String::IndexOfAny(System::String ^ str, array<wchar_t>^ anyOf, int startIndex)
+    {
+        if (anyOf == nullptr)
+            throw gcnew ArgumentNullException("anyOf is null");
+
+        if (anyOf->Length > SearchCharsMax)
+            throw gcnew ArgumentOutOfRangeException(System::String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+
+        if (!str->Length)
+            return -1;
+
+        if (startIndex < 0 || startIndex + 1 > str->Length)
+            throw gcnew ArgumentOutOfRangeException(L"startIndex must be greater than 0 and smaller than str length - 1");
+
+        pin_ptr<const wchar_t> pinStr = PtrToStringChars(str);
+        pin_ptr<const wchar_t> pinChars = &anyOf[0];
+        return StrIndexOfAny_SSE2(pinStr, pinChars, anyOf->Length, startIndex, str->Length - startIndex);
+    }
+
+    int __clrcall String::IndexOfAny(System::String ^ str, array<wchar_t>^ anyOf, int startIndex, int count)
+    {
+        //if (str->Length < 128)
+        //    return str->IndexOfAny(anyOf, startIndex, count);
+        if (anyOf == nullptr)
+            throw gcnew ArgumentNullException("anyOf is null");
+
+        if (anyOf->Length > SearchCharsMax)
+            throw gcnew ArgumentOutOfRangeException(System::String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+
+        if (!str->Length)
+            return -1;
+
+        if (startIndex < 0 || startIndex + 1 > str->Length)
+            throw gcnew ArgumentOutOfRangeException(L"startIndex must be greater than 0 and smaller than str length - 1");
+
+        if (count > str->Length - startIndex)
+            throw gcnew ArgumentOutOfRangeException(L"count must be smaller than str - startIndex");
+
+        pin_ptr<const wchar_t> pinStr = PtrToStringChars(str);
+        pin_ptr<const wchar_t> pinChars = &anyOf[0];
+        return StrIndexOfAny_SSE2(pinStr, pinChars, anyOf->Length, startIndex, count);
+    }
+
 #ifdef INTRINSICS_TEST
+
     bool __clrcall String::IndexOfAllWip(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count)
     {
         if (chars->Length > SearchCharsMax)
@@ -623,5 +758,58 @@ namespace Intrinsics
         resultsCount = StrIndexOfAll_CPP(pinStr, pinChars, chars->Length, startIndex, count, (int*)pinResults);
         return resultsCount != 0;
     }
+
+
+    int __clrcall String::IndexOfAnyCli(System::String ^ str, array<wchar_t>^ anyOf, int startIndex, int count)
+    {
+        if (anyOf == nullptr)
+            throw gcnew ArgumentNullException("anyOf is null");
+
+        if (anyOf->Length > SearchCharsMax)
+            throw gcnew ArgumentOutOfRangeException(System::String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+
+        if (!str->Length)
+            return -1;
+
+        if (startIndex < 0 || startIndex + 1 > str->Length)
+            throw gcnew ArgumentOutOfRangeException(L"startIndex must be greater than 0 and smaller than str length - 1");
+
+        if (count > str->Length - startIndex)
+            throw gcnew ArgumentOutOfRangeException(L"count must be smaller than str - startIndex");
+
+        int end = startIndex + count;
+        for (int i = startIndex; i < end; ++i)
+        {
+            for (int j = 0; j < anyOf->Length; ++j)
+            {
+                if (str[i] == anyOf[j])
+                    return i;
+            }
+        }
+        return -1;
+    }
+
+    int __clrcall String::IndexOfAnyCpp(System::String ^ str, array<wchar_t>^ anyOf, int startIndex, int count)
+    {
+        if (anyOf == nullptr)
+            throw gcnew ArgumentNullException("anyOf is null");
+
+        if (anyOf->Length > SearchCharsMax)
+            throw gcnew ArgumentOutOfRangeException(System::String::Format(L"chars length must be smaller than {0}", SearchCharsMax));
+
+        if (!str->Length)
+            return -1;
+
+        if (startIndex < 0 || startIndex + 1 > str->Length)
+            throw gcnew ArgumentOutOfRangeException(L"startIndex must be greater than 0 and smaller than str length - 1");
+
+        if (count > str->Length - startIndex)
+            throw gcnew ArgumentOutOfRangeException(L"count must be smaller than str - startIndex");
+
+        pin_ptr<const wchar_t> pinStr = PtrToStringChars(str);
+        pin_ptr<const wchar_t> pinChars = &anyOf[0];
+        return StrIndexOfAny_CPP(pinStr, pinChars, anyOf->Length, startIndex, count);
+    }
+
 #endif //#ifdef INTRINSICS_TEST
 }

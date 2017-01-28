@@ -66,12 +66,23 @@ namespace Intrinsics
 
         static bool __clrcall IndexOfAll(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count);
 
+        static int __clrcall IndexOfAny(System::String ^ str, array<wchar_t>^ anyOf);
+
+        static int __clrcall IndexOfAny(System::String ^ str, array<wchar_t>^ anyOf, int startIndex);
+
+        static int __clrcall IndexOfAny(System::String ^ str, array<wchar_t>^ anyOf, int startIndex, int count);
+
 #ifdef INTRINSICS_TEST
+        // use to make optim and compare results
         static bool __clrcall IndexOfAllWip(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count);
 
         static bool __clrcall IndexOfAllCli(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count);
 
         static bool __clrcall IndexOfAllCpp(System::String ^ str, System::String ^ chars, array<MatchIndex >^% results, [Out] int% resultsCount, int startIndex, int count);
+
+        static int __clrcall IndexOfAnyCli(System::String ^ str, array<wchar_t>^ anyOf, int startIndex, int count);
+
+        static int __clrcall IndexOfAnyCpp(System::String ^ str, array<wchar_t>^ anyOf, int startIndex, int count);
 #endif
     };
 }
