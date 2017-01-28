@@ -10,8 +10,8 @@ namespace IntrinsicsTest
         private const int stringCharsCount  = 0;
         private int[] buckets = { 4, 8, 16, 32, 64, 92, 128, 256, 512, 768, 1024, 2048, 4096, stringSizeMax };
         private const string possiblesChar = "012345679abcdefgzhjklmnopqrstuvwxyz";
-        private const string searchChars = "[](){}!@#$%^&*(";
-        private const int stringsPerBucket = 1024 * 12;
+        private const string searchChars = "[](){}!@#$%^&*";
+        private const int stringsPerBucket = 1024 * 1;
         private string[] strings;
         private Intrinsics.String.MatchIndex[] results = new Intrinsics.String.MatchIndex[stringSizeMax];
 
@@ -269,10 +269,10 @@ namespace IntrinsicsTest
                 CheckTrue(sseResult[j].StringIndex == cppResult[j].StringIndex);
                 CheckTrue(sseResult[j].StringIndex == v2Result[j].StringIndex);
 
-                CheckTrue(sseResult[j].CharIndex == csResult[j].CharIndex);
-                CheckTrue(sseResult[j].CharIndex == cliResult[j].CharIndex);
-                CheckTrue(sseResult[j].CharIndex == cppResult[j].CharIndex);
-                CheckTrue(sseResult[j].CharIndex == v2Result[j].CharIndex);
+                CheckTrue(chars[sseResult[j].CharIndex] == chars[csResult[j].CharIndex]);
+                CheckTrue(chars[sseResult[j].CharIndex] == chars[cliResult[j].CharIndex]);
+                CheckTrue(chars[sseResult[j].CharIndex] == chars[cppResult[j].CharIndex]);
+                CheckTrue(chars[sseResult[j].CharIndex] == chars[v2Result[j].CharIndex]);
             }
         }
 
